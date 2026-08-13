@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Contas de Casa</title>
+  <style>
+    :root {
+      --azul: #1d4ed8;
+      --verde: #15803d;
+      --vermelho: #b91c1c;
+      --laranja: #c2410c;
+      --roxo: #7c3aed;
+      --cinza: #475569;
+      --fundo: #f1f5f9;
+      --borda: #cbd5e1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fundo);
+      color: #0f172a;
+      font-size: 18px;
+      line-height: 1.4;
+      min-height: 100vh;
+    }
+    .hidden { display: none !important; }
+
+    #login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(160deg, #1e3a8a, #3b82f6);
+    }
+    .login-box {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .login-box h1 { text-align: center; font-size: 1.8rem; margin-bottom: 8px; color: var(--azul); }
+    .login-box p { text-align: center; color: var(--cinza); margin-bottom: 24px; font-size: 1rem; }
+    label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.05rem; }
+    select, input {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.15rem;
+      border: 2px solid var(--borda);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      background: #fff;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--azul); }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-azul { background: var(--azul); color: white; }
+    .btn-verde { background: var(--verde); color: white; }
+    .btn-vermelho { background: var(--vermelho); color: white; }
+    .btn-roxo { background: var(--roxo); color: white; }
+    .btn-cinza { background: #e2e8f0; color: #0f172a; }
+    .erro {
+      background: #fee2e2; color: var(--vermelho);
+      padding: 12px; border-radius: 10px; margin-bottom: 16px;
+      text-align: center; font-weight: 600; display: none;
+    }
+    .dica-login {
+      margin-top: 20px; font-size: 0.95rem; color: var(--cinza);
+      text-align: center; line-height: 1.6;
+    }
+
+    #app { min-height: 100vh; padding-bottom: 110px; }
+    header {
+      background: var(--azul); color: white;
+      padding: 16px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 50;
+    }
+    header h1 { font-size: 1.3rem; }
+    header .user { font-size: 0.95rem; opacity: 0.9; }
+    .sair {
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      padding: 10px 14px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+
+    .conteudo { padding: 16px; max-width: 700px; margin: 0 auto; }
+
+    /* Abas */
+    .abas {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .aba {
+      flex: 1;
+      min-width: 100px;
+      padding: 14px 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: 3px solid var(--borda);
+      border-radius: 14px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      color: var(--cinza);
+    }
+    .aba.ativa {
+      border-color: var(--azul);
+      background: #eff6ff;
+      color: var(--azul);
+    }
+    .aba.ativa.entrada { border-color: var(--verde); background: #f0fdf4; color: var(--verde); }
+    .aba.ativa.fixo { border-color: var(--roxo); background: #f5f3ff; color: var(--roxo); }
+    .aba.ativa.variavel { border-color: var(--laranja); background: #fff7ed; color: var(--laranja); }
+
+    .resumo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .resumo-card {
+      background: white; border-radius: 16px; padding: 16px 12px;
+      text-align: center; border: 2px solid var(--borda);
+    }
+    .resumo-card .titulo { font-size: 0.9rem; color: var(--cinza); margin-bottom: 4px; }
+    .resumo-card .valor { font-size: 1.25rem; font-weight: 800; }
+    .resumo-card.entrada .valor { color: var(--verde); }
+    .resumo-card.fixo .valor { color: var(--roxo); }
+    .resumo-card.variavel .valor { color: var(--laranja); }
+    .resumo-card.saldo .valor { color: var(--azul); }
+    .resumo-card.saldo-neg .valor { color: var(--vermelho); }
+
+    .secao-titulo {
+      font-size: 1.2rem; font-weight: 800; margin: 8px 0 14px;
+    }
+
+    .categorias-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .cat-card {
+      background: white; border-radius: 16px; padding: 18px 12px;
+      text-align: center; border: 3px solid var(--borda);
+      cursor: pointer; min-height: 115px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+    }
+    .cat-card:active { transform: scale(0.97); }
+    .cat-card .icone {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 8px; color: white;
+    }
+    .cat-card .nome { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .cat-card .total-cat { font-size: 1.05rem; font-weight: 800; }
+
+    .conta-item {
+      background: white; border-radius: 14px; padding: 14px;
+      margin-bottom: 10px; border: 2px solid var(--borda);
+    }
+    .conta-item .topo { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .conta-item .desc { font-weight: 700; font-size: 1.05rem; }
+    .conta-item .valor { font-size: 1.15rem; font-weight: 800; }
+    .conta-item .valor.entrada { color: var(--verde); }
+    .conta-item .valor.fixo { color: var(--roxo); }
+    .conta-item .valor.variavel { color: var(--laranja); }
+    .conta-item .info { font-size: 0.9rem; color: var(--cinza); margin-bottom: 8px; }
+    .botoes-conta { display: flex; gap: 8px; }
+    .botoes-conta .btn { padding: 11px; font-size: 0.95rem; flex: 1; }
+
+    .barra-baixo {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 2px solid var(--borda);
+      display: flex; padding: 10px 6px; gap: 6px; z-index: 40;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+    .barra-baixo .btn {
+      flex: 1; padding: 13px 4px; font-size: 0.85rem; border-radius: 12px;
+    }
+
+    .modal-fundo {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; visibility: hidden; transition: 0.2s;
+    }
+    .modal-fundo.aberto { opacity: 1; visibility: visible; }
+    .modal {
+      background: white; width: 100%; max-width: 500px;
+      border-radius: 24px 24px 0 0; padding: 24px 20px 32px;
+      max-height: 90vh; overflow-y: auto;
+      transform: translateY(100%); transition: 0.25s;
+    }
+    .modal-fundo.aberto .modal { transform: translateY(0); }
+    .modal h2 { font-size: 1.35rem; margin-bottom: 18px; text-align: center; }
+    .modal .btn { margin-top: 8px; }
+    .modal .btn-fechar {
+      background: none; border: none; font-size: 1.8rem;
+      position: absolute; right: 16px; top: 12px; color: var(--cinza); cursor: pointer;
+    }
+    .modal-header { position: relative; }
+
+    .valores-rapidos {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .valor-rapido {
+      background: #e0e7ff; border: 2px solid #a5b4fc; border-radius: 12px;
+      padding: 13px 6px; font-size: 1.05rem; font-weight: 700;
+      color: var(--azul); text-align: center; cursor: pointer;
+    }
+    .valor-rapido:active { background: #c7d2fe; }
+
+    .vazio { text-align: center; padding: 30px 16px; color: var(--cinza); font-size: 1.05rem; }
+
+    .toast {
+      position: fixed; bottom: 100px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0f172a; color: white; padding: 14px 22px;
+      border-radius: 12px; font-weight: 600; z-index: 200;
+      opacity: 0; transition: 0.3s; max-width: 90%; text-align: center;
+    }
+    .toast.mostra { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (min-width: 600px) {
+      .categorias-grid { grid-template-columns: repeat(3, 1fr); }
+      .modal { border-radius: 20px; margin-bottom: 40px; }
+      .modal-fundo { align-items: center; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login">
+    <div class="login-box">
+      <h1>🏠 Contas de Casa</h1>
+      <p>Escolha quem está usando</p>
+      <div class="erro" id="erro-login"></div>
+      <label for="usuario">Quem é você?</label>
+      <select id="usuario">
+        <option value="">Toque para escolher</option>
+        <option value="pedro">Pedro</option>
+        <option value="carol">Carol</option>
+        <option value="lucas">Lucas</option>
+        <option value="leticia">Letícia</option>
+      </select>
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" placeholder="Digite a senha" />
+      <button class="btn btn-azul" onclick="entrar()">Entrar</button>
+      <div class="dica-login">
+        Pedro → pedro123<br>
+        Carol → carol123<br>
+        Lucas → lucas123<br>
+        Letícia → leticia123
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <div>
+        <h1>🏠 Contas de Casa</h1>
+        <div class="user" id="nome-usuario">Pedro</div>
+      </div>
+      <button class="sair" onclick="sair()">Sair</button>
+    </header>
+
+    <div class="conteudo">
+      <!-- Resumo sempre visível -->
+      <div class="resumo" id="resumo"></div>
+
+      <!-- Abas -->
+      <div class="abas">
+        <button class="aba ativa entrada" data-aba="entrada" onclick="trocarAba('entrada')">💰 Entradas</button>
+        <button class="aba fixo" data-aba="fixo" onclick="trocarAba('fixo')">📌 Fixos</button>
+        <button class="aba variavel" data-aba="variavel" onclick="trocarAba('variavel')">🛒 Variáveis</button>
+      </div>
+
+      <!-- Conteúdo das abas -->
+      <div id="painel-entrada">
+        <div class="secao-titulo" style="color:var(--verde)">💰 Entradas de dinheiro</div>
+        <div class="categorias-grid" id="grid-entrada"></div>
+      </div>
+
+      <div id="painel-fixo" class="hidden">
+        <div class="secao-titulo" style="color:var(--roxo)">📌 Gastos Fixos</div>
+        <div class="categorias-grid" id="grid-fixo"></div>
+      </div>
+
+      <div id="painel-variavel" class="hidden">
+        <div class="secao-titulo" style="color:var(--laranja)">🛒 Gastos Variáveis</div>
+        <div class="categorias-grid" id="grid-variavel"></div>
+      </div>
+
+      <!-- Lista -->
+      <div class="secao-titulo" style="margin-top:28px">Últimos lançamentos</div>
+      <div id="lista-contas"></div>
+    </div>
+
+    <div class="barra-baixo">
+      <button class="btn btn-cinza" onclick="abrirBackup()">💾</button>
+      <button class="btn btn-verde" onclick="abrirNovo('entrada')">+ Entrada</button>
+      <button class="btn btn-roxo" onclick="abrirNovo('fixo')">+ Fixo</button>
+      <button class="btn btn-vermelho" onclick="abrirNovo('variavel')">+ Variável</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-fundo" id="modal-conta">
+    <div class="modal">
+      <div class="modal-header">
+        <button class="btn-fechar" onclick="fecharModal('modal-conta')">×</button>
+        <h2 id="titulo-modal">Novo lançamento</h2>
+      </div>
+      <input type="hidden" id="conta-id" />
+
+      <label>Tipo</label>
+      <select id="select-tipo" onchange="atualizarCategoriasModal()">
+        <option value="entrada">💰 Entrada de dinheiro</option>
+        <option value="fixo">📌 Gasto Fixo</option>
+        <option value="variavel">🛒 Gasto Variável</option>
+      </select>
+
+      <label>Categoria</label>
+      <select id="conta-cat"></select>
+
+      <label>Descrição</label>
+      <input type="text" id="conta-desc" placeholder="Ex: Salário março / Conta de luz" />
+
+      <label>Valor (R$)</label>
+      <input type="number" id="conta-valor" placeholder="0,00" step="0.01" min="0" />
+
+      <div class="valores-rapidos">
+        <div class="valor-rapido" onclick="colocarValor(50)">R$ 50</div>
+        <div class="valor-rapido" onclick="colocarValor(100)">R$ 100</div>
+        <div class="valor-rapido" onclick="colocarValor(200)">R$ 200</div>
+        <div class="valor-rapido" onclick="colocarValor(500)">R$ 500</div>
+        <div class="valor-rapido" onclick="colocarValor(1000)">R$ 1.000</div>
+        <div class="valor-rapido" onclick="colocarValor(2000)">R$ 2.000</div>
+      </div>
+
+      <label>Data</label>
+      <input type="date" id="conta-data" />
+
+      <button class="btn btn-azul" onclick="salvarConta()" style="margin-top:16px">Salvar</button>
+      <button class="btn btn-cinza" onclick="fecharModal('modal-conta')" style="margin-top:8px">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal-fundo" id="modal-backup">
+    <div class="modal">
+      <div class="modal-header">
+        <button class="btn-fechar" onclick="fecharModal('modal-backup')">×</button>
+        <h2>Salvar ou Restaurar</h2>
+      </div>
+      <p style="margin-bottom:18px;color:var(--cinza);text-align:center">
+        Baixe uma cópia ou importe dados de outro aparelho (os itens serão adicionados, não apagados).
+      </p>
+      <button class="btn btn-azul" onclick="exportar()">⬇️ Baixar cópia</button>
+      <label class="btn btn-verde" style="margin-top:10px;cursor:pointer">
+        ⬆️ Importar e adicionar
+        <input type="file" accept=".json" style="display:none" onchange="importar(event)" />
+      </label>
+      <button class="btn btn-cinza" onclick="fecharModal('modal-backup')" style="margin-top:10px">Fechar</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const USUARIOS = {
+      pedro:   { senha: 'pedro123',   nome: 'Pedro' },
+      carol:   { senha: 'carol123',   nome: 'Carol' },
+      lucas:   { senha: 'lucas123',   nome: 'Lucas' },
+      leticia: { senha: 'leticia123', nome: 'Letícia' }
+    };
+
+    const ENTRADAS = [
+      { id: 'salario',   nome: 'Salário',     cor: '#15803d', icone: '💼' },
+      { id: 'freelance', nome: 'Freelance',   cor: '#0d9488', icone: '🛠️' },
+      { id: 'extra',     nome: 'Renda extra', cor: '#059669', icone: '💵' },
+      { id: 'outros_in', nome: 'Outros',      cor: '#64748b', icone: '📥' }
+    ];
+
+    const FIXOS = [
+      { id: 'agua',     nome: 'Água',      cor: '#0ea5e9', icone: '💧' },
+      { id: 'luz',      nome: 'Luz',       cor: '#f59e0b', icone: '💡' },
+      { id: 'gas',      nome: 'Gás',       cor: '#ef4444', icone: '🔥' },
+      { id: 'internet', nome: 'Internet',  cor: '#8b5cf6', icone: '📶' },
+      { id: 'aluguel',  nome: 'Aluguel',   cor: '#64748b', icone: '🏠' },
+      { id: 'outros_f', nome: 'Outros',    cor: '#78716c', icone: '📋' }
+    ];
+
+    const VARIAVEIS = [
+      { id: 'mercado',    nome: 'Mercado',      cor: '#22c55e', icone: '🛒' },
+      { id: 'gasolina',   nome: 'Gasolina',     cor: '#f59e0b', icone: '⛽' },
+      { id: 'saida',      nome: 'Saída / Lazer',cor: '#ec4899', icone: '🎉' },
+      { id: 'comida',     nome: 'Comida fora',  cor: '#f97316', icone: '🍔' },
+      { id: 'transporte', nome: 'Transporte',   cor: '#3b82f6', icone: '🚌' },
+      { id: 'outros_v',   nome: 'Outros',       cor: '#78716c', icone: '📋' }
+    ];
+
+    let usuarioAtual = null;
+    let lancamentos = [];
+    let abaAtual = 'entrada';
+
+    function carregar() {
+      try {
+        const raw = localStorage.getItem('contas_v3');
+        if (raw) lancamentos = JSON.parse(raw);
+      } catch(e) { lancamentos = []; }
+    }
+    function salvar() {
+      localStorage.setItem('contas_v3', JSON.stringify(lancamentos));
+    }
+
+    function entrar() {
+      const u = document.getElementById('usuario').value;
+      const s = document.getElementById('senha').value;
+      const erro = document.getElementById('erro-login');
+      if (USUARIOS[u] && USUARIOS[u].senha === s) {
+        usuarioAtual = u;
+        erro.style.display = 'none';
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('nome-usuario').textContent = USUARIOS[u].nome;
+        atualizarTela();
+        mostrarToast('Olá, ' + USUARIOS[u].nome + '!');
+      } else {
+        erro.textContent = 'Usuário ou senha errados';
+        erro.style.display = 'block';
+      }
+    }
+    function sair() {
+      usuarioAtual = null;
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login').classList.remove('hidden');
+      document.getElementById('senha').value = '';
+    }
+
+    function dinheiro(v) {
+      return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    function hoje() { return new Date().toISOString().slice(0, 10); }
+    function formatarData(d) {
+      if (!d) return '';
+      const [a, m, dia] = d.split('-');
+      return dia + '/' + m + '/' + a;
+    }
+    function mostrarToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('mostra');
+      setTimeout(() => t.classList.remove('mostra'), 2500);
+    }
+    function id() { return 'l' + Date.now() + Math.random().toString(36).slice(2, 6); }
+
+    function listaPorTipo(tipo) {
+      if (tipo === 'entrada') return ENTRADAS;
+      if (tipo === 'fixo') return FIXOS;
+      return VARIAVEIS;
+    }
+    function acharCat(idCat) {
+      return ENTRADAS.find(c => c.id === idCat) || FIXOS.find(c => c.id === idCat) || VARIAVEIS.find(c => c.id === idCat) || { nome: 'Outros', cor: '#78716c' };
+    }
+
+    function trocarAba(aba) {
+      abaAtual = aba;
+      document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
+      document.querySelector(`.aba[data-aba="${aba}"]`).classList.add('ativa');
+      document.getElementById('painel-entrada').classList.toggle('hidden', aba !== 'entrada');
+      document.getElementById('painel-fixo').classList.toggle('hidden', aba !== 'fixo');
+      document.getElementById('painel-variavel').classList.toggle('hidden', aba !== 'variavel');
+    }
+
+    function atualizarTela() {
+      let totIn = 0, totFixo = 0, totVar = 0;
+      lancamentos.forEach(l => {
+        if (l.tipo === 'entrada') totIn += Number(l.valor);
+        else if (l.tipo === 'fixo') totFixo += Number(l.valor);
+        else totVar += Number(l.valor);
+      });
+      const saldo = totIn - totFixo - totVar;
+
+      document.getElementById('resumo').innerHTML = `
+        <div class="resumo-card entrada">
+          <div class="titulo">Entradas</div>
+          <div class="valor">${dinheiro(totIn)}</div>
+        </div>
+        <div class="resumo-card fixo">
+          <div class="titulo">Gastos Fixos</div>
+          <div class="valor">${dinheiro(totFixo)}</div>
+        </div>
+        <div class="resumo-card variavel">
+          <div class="titulo">Gastos Variáveis</div>
+          <div class="valor">${dinheiro(totVar)}</div>
+        </div>
+        <div class="resumo-card ${saldo >= 0 ? 'saldo' : 'saldo-neg'}">
+          <div class="titulo">Saldo</div>
+          <div class="valor">${dinheiro(saldo)}</div>
+        </div>
+      `;
+
+      // Grids
+      function montarGrid(lista, tipo, elId) {
+        const totais = {};
+        lista.forEach(c => totais[c.id] = 0);
+        lancamentos.filter(l => l.tipo === tipo).forEach(l => {
+          if (totais[l.categoria] !== undefined) totais[l.categoria] += Number(l.valor);
+        });
+        document.getElementById(elId).innerHTML = lista.map(c => `
+          <div class="cat-card" onclick="abrirNovo('${tipo}', '${c.id}')">
+            <div class="icone" style="background:${c.cor}">${c.icone}</div>
+            <div class="nome">${c.nome}</div>
+            <div class="total-cat" style="color:${c.cor}">${dinheiro(totais[c.id])}</div>
+          </div>
+        `).join('');
+      }
+      montarGrid(ENTRADAS, 'entrada', 'grid-entrada');
+      montarGrid(FIXOS, 'fixo', 'grid-fixo');
+      montarGrid(VARIAVEIS, 'variavel', 'grid-variavel');
+
+      // Lista
+      const lista = [...lancamentos].sort((a, b) => b.data.localeCompare(a.data));
+      if (lista.length === 0) {
+        document.getElementById('lista-contas').innerHTML = `<div class="vazio">Nenhum lançamento ainda.<br>Toque nos quadrados ou nos botões de baixo.</div>`;
+        return;
+      }
+      document.getElementById('lista-contas').innerHTML = lista.map(l => {
+        const cat = acharCat(l.categoria);
+        const corClasse = l.tipo === 'entrada' ? 'entrada' : (l.tipo === 'fixo' ? 'fixo' : 'variavel');
+        const sinal = l.tipo === 'entrada' ? '+' : '−';
+        const label = l.tipo === 'entrada' ? 'Entrada' : (l.tipo === 'fixo' ? 'Fixo' : 'Variável');
+        return `
+          <div class="conta-item">
+            <div class="topo">
+              <div>
+                <div class="desc">${l.descricao}</div>
+                <div class="info">${cat.nome} • ${formatarData(l.data)} • ${label}</div>
+              </div>
+              <div class="valor ${corClasse}">${sinal} ${dinheiro(l.valor)}</div>
+            </div>
+            <div class="botoes-conta">
+              <button class="btn btn-cinza" onclick="editar('${l.id}')">Editar</button>
+              <button class="btn btn-vermelho" onclick="apagar('${l.id}')">Apagar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function atualizarCategoriasModal() {
+      const tipo = document.getElementById('select-tipo').value;
+      const lista = listaPorTipo(tipo);
+      document.getElementById('conta-cat').innerHTML = lista.map(c =>
+        `<option value="${c.id}">${c.icone} ${c.nome}</option>`
+      ).join('');
+    }
+
+    function abrirNovo(tipo, catId) {
+      document.getElementById('conta-id').value = '';
+      const titulos = { entrada: 'Nova Entrada', fixo: 'Novo Gasto Fixo', variavel: 'Novo Gasto Variável' };
+      document.getElementById('titulo-modal').textContent = titulos[tipo] || 'Novo';
+      document.getElementById('select-tipo').value = tipo || 'variavel';
+      document.getElementById('conta-desc').value = '';
+      document.getElementById('conta-valor').value = '';
+      document.getElementById('conta-data').value = hoje();
+      atualizarCategoriasModal();
+      if (catId) document.getElementById('conta-cat').value = catId;
+      document.getElementById('modal-conta').classList.add('aberto');
+    }
+
+    function editar(idL) {
+      const l = lancamentos.find(x => x.id === idL);
+      if (!l) return;
+      document.getElementById('conta-id').value = l.id;
+      document.getElementById('titulo-modal').textContent = 'Editar';
+      document.getElementById('select-tipo').value = l.tipo;
+      document.getElementById('conta-desc').value = l.descricao;
+      document.getElementById('conta-valor').value = l.valor;
+      document.getElementById('conta-data').value = l.data;
+      atualizarCategoriasModal();
+      document.getElementById('conta-cat').value = l.categoria;
+      document.getElementById('modal-conta').classList.add('aberto');
+    }
+
+    function colocarValor(v) { document.getElementById('conta-valor').value = v; }
+
+    function salvarConta() {
+      const idL = document.getElementById('conta-id').value;
+      const tipo = document.getElementById('select-tipo').value;
+      const desc = document.getElementById('conta-desc').value.trim();
+      const valor = parseFloat(document.getElementById('conta-valor').value);
+      const data = document.getElementById('conta-data').value;
+      const cat = document.getElementById('conta-cat').value;
+
+      if (!desc) { mostrarToast('Escreva uma descrição'); return; }
+      if (isNaN(valor) || valor <= 0) { mostrarToast('Coloque um valor válido'); return; }
+      if (!data) { mostrarToast('Escolha a data'); return; }
+
+      if (idL) {
+        const idx = lancamentos.findIndex(x => x.id === idL);
+        if (idx >= 0) lancamentos[idx] = { ...lancamentos[idx], tipo, descricao: desc, valor, data, categoria: cat };
+      } else {
+        lancamentos.push({ id: id(), tipo, descricao: desc, valor, data, categoria: cat, criadoPor: usuarioAtual });
+      }
+      salvar();
+      fecharModal('modal-conta');
+      atualizarTela();
+      mostrarToast('Salvo!');
+    }
+
+    function apagar(idL) {
+      if (!confirm('Tem certeza que quer apagar?')) return;
+      lancamentos = lancamentos.filter(x => x.id !== idL);
+      salvar();
+      atualizarTela();
+      mostrarToast('Apagado');
+    }
+
+    function abrirBackup() { document.getElementById('modal-backup').classList.add('aberto'); }
+    function exportar() {
+      const blob = new Blob([JSON.stringify({ lancamentos }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'contas-casa-' + hoje() + '.json';
+      a.click();
+      mostrarToast('Arquivo baixado!');
+      fecharModal('modal-backup');
+    }
+    function importar(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          const dados = JSON.parse(ev.target.result);
+          if (dados.lancamentos && Array.isArray(dados.lancamentos)) {
+            const idsExistentes = new Set(lancamentos.map(l => l.id));
+            let adicionados = 0;
+            dados.lancamentos.forEach(l => {
+              // Se já existe o mesmo id, gera um id novo para não sobrescrever
+              if (idsExistentes.has(l.id)) {
+                l = { ...l, id: id() };
+              }
+              lancamentos.push(l);
+              idsExistentes.add(l.id);
+              adicionados++;
+            });
+            salvar();
+            atualizarTela();
+            mostrarToast(adicionados + ' item(ns) adicionado(s)!');
+            fecharModal('modal-backup');
+          } else {
+            mostrarToast('Arquivo inválido');
+          }
+        } catch(err) {
+          mostrarToast('Erro no arquivo');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
+    document.querySelectorAll('.modal-fundo').forEach(m => {
+      m.addEventListener('click', function(e) { if (e.target === this) fecharModal(this.id); });
+    });
+
+    carregar();
+  </script>
+</body>
+</html>
